@@ -152,7 +152,7 @@ st.markdown("""<div class="hero"><div class="eyebrow">PERSONALIZED HEALTH COVERA
 <h1>ระบบแนะนำความต้องการความคุ้มครองสุขภาพ</h1>
 </div>""", unsafe_allow_html=True)
 
-st.info("**การสาธิต ไม่ใช่การตรวจวินิจฉัยหรือขายประกัน** , icon="ℹ️")
+st.info("**การสาธิต ไม่ใช่การตรวจวินิจฉัยหรือขายประกัน**", icon="ℹ️")
 
 with st.form("health_form", clear_on_submit=False):
     st.markdown('<div class="step-name"> ข้อมูลสุขภาพ</div>', unsafe_allow_html=True)
@@ -175,13 +175,11 @@ with st.form("health_form", clear_on_submit=False):
     select_feature("Family_History_CVD", right)
     select_feature("Family_History_T2D", left)
 
-    st.markdown('<div class="step-name"> </div>', unsafe_allow_html=True)
     select_feature("Smoking_Status", left)
     select_feature("Alcohol_Consumption", right)
     select_feature("Physical_Activity_Level", left)
     select_feature("Sleep_Quality", right)
 
-    st.markdown('<div class="step-name"> </div>', unsafe_allow_html=True)
     numeric_feature("Stress_Level", left)
     numeric_feature("Depression_Score", right)
     numeric_feature("Anxiety_Score", left)
@@ -258,4 +256,3 @@ if result is not None:
     st.caption("**หมายเหตุ:** ผลนี้เป็นการประมาณประเภทความต้องการความคุ้มครอง เพื่อการสาธิต ไม่ใช่โอกาสเกิดโรค การวินิจฉัย หรือคำแนะนำซื้อกรมธรรม์จริง")
 
 st.markdown("---")
-
