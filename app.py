@@ -166,8 +166,16 @@ with st.form("health_form", clear_on_submit=False):
     def numeric_feature(feature: str, col):
         low, high = NUMERIC_RANGES[feature]
         with col:
-            st.text_input(THAI_FEATURES[feature], key=f"input_{feature}",
-                          help=f"พิมพ์ตัวเลขในช่วง {low:g}–{high:g} หรือพิมพ์ 'ไม่ทราบ' / เว้นว่าง")
+            # Native help=? is a hover tooltip. Replace it with a tap-friendly
+            # Streamlit popover so visitors on phones can read instructions.
+            st.text_input(
+                THAI_FEATURES[feature],
+                key=f"input_{feature}",
+            )
+            with st.popover("ⓘ วิธีกรอก", type="tertiary"):
+                st.markdown(f"**{THAI_FEATURES[feature]}**")
+                st.write(f"กรอกตัวเลขในช่วง {low:g}–{high:g}")
+                st.caption("หากไม่ทราบข้อมูล สามารถพิมพ์ 'ไม่ทราบ' หรือเว้นว่างได้")
 
     numeric_feature("BMI", left)
     select_feature("Heart_Disease_Risk", right)
