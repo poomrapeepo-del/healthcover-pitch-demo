@@ -44,6 +44,72 @@ st.markdown("""
     .little {font-size:12px;color:#667b8e;line-height:1.6}
     #MainMenu, footer {visibility: hidden;}
     div[data-testid="stFormSubmitButton"] button {background:#166db7; color:white;border-radius:10px;border:0;font-weight:700;}
+
+    /* -----------------------------------------------------------------
+       ACCESSIBILITY FIX: readable text on light AND dark device settings.
+       Leave hero/result custom colors unchanged; scope labels to the form.
+       ----------------------------------------------------------------- */
+    [data-testid="stAppViewContainer"] {color:#19324f !important;}
+    [data-testid="stSidebar"] {color:#19324f !important;}
+    [data-testid="stForm"] {
+        background:rgba(255,255,255,0.95) !important;
+        border:1px solid #d5e0ed !important;
+        border-radius:15px !important;
+    }
+    [data-testid="stForm"] [data-testid="stWidgetLabel"],
+    [data-testid="stForm"] [data-testid="stWidgetLabel"] *,
+    [data-testid="stForm"] label,
+    [data-testid="stForm"] label * {
+        color:#172f4a !important;
+        opacity:1 !important;
+        -webkit-text-fill-color:#172f4a !important;
+        font-weight:600 !important;
+    }
+    [data-testid="stForm"] [data-testid="stTextInput"] input {
+        background-color:#edf3f9 !important;
+        color:#172f4a !important;
+        -webkit-text-fill-color:#172f4a !important;
+        caret-color:#172f4a !important;
+    }
+    [data-testid="stForm"] [data-testid="stTextInput"] input::placeholder {
+        color:#586f87 !important;
+        opacity:1 !important;
+    }
+    [data-testid="stForm"] [data-testid="stSelectbox"] [data-baseweb="select"] > div {
+        background-color:#edf3f9 !important;
+        border-color:#c9d8e8 !important;
+    }
+    [data-testid="stForm"] [data-testid="stSelectbox"] [data-baseweb="select"] *,
+    [data-testid="stForm"] [data-testid="stSelectbox"] [data-baseweb="select"] input {
+        color:#172f4a !important;
+        -webkit-text-fill-color:#172f4a !important;
+        opacity:1 !important;
+    }
+    [data-testid="stForm"] [data-testid="stSelectbox"] svg {
+        fill:#172f4a !important;
+    }
+    /* Dropdown menus are portalled outside the form in recent Streamlit. */
+    div[data-baseweb="popover"] {background:#ffffff !important;}
+    div[data-baseweb="popover"] [role="listbox"] {background:#ffffff !important;}
+    div[data-baseweb="popover"] [role="option"] {
+        color:#172f4a !important;
+        background-color:#ffffff !important;
+        -webkit-text-fill-color:#172f4a !important;
+    }
+    div[data-baseweb="popover"] [role="option"]:hover,
+    div[data-baseweb="popover"] [role="option"][aria-selected="true"] {
+        background-color:#e5f2ff !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
+    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h3 {
+        color:#1b3655 !important;
+    }
+    [data-testid="stForm"] button[kind="primaryFormSubmit"],
+    [data-testid="stForm"] div[data-testid="stFormSubmitButton"] button {
+        background-color:#166db7 !important;
+        color:#ffffff !important;
+        -webkit-text-fill-color:#ffffff !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
