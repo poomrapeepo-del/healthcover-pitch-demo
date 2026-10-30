@@ -150,13 +150,12 @@ st.sidebar.caption("สำหรับ Top 3 ที่เป็นผลทำ�
 
 st.markdown("""<div class="hero"><div class="eyebrow">PERSONALIZED HEALTH COVERAGE • RESEARCH DEMO</div>
 <h1>ระบบแนะนำความต้องการความคุ้มครองสุขภาพ</h1>
-<p>กรอกข้อมูลสุขภาพ → วิเคราะห์ด้วย CatBoost → แสดง 3 อันดับคำแนะนำและปัจจัยที่เกี่ยวข้อง</p>
 </div>""", unsafe_allow_html=True)
 
-st.info("**การสาธิต ไม่ใช่การตรวจวินิจฉัยหรือขายประกัน**  ผลเป็นความต้องการความคุ้มครองตามเกณฑ์ที่กำหนดจากงานวิจัย และเปอร์เซ็นต์จาก CatBoost ไม่ใช่โอกาสเกิดโรค", icon="ℹ️")
+st.info("**การสาธิต ไม่ใช่การตรวจวินิจฉัยหรือขายประกัน** , icon="ℹ️")
 
 with st.form("health_form", clear_on_submit=False):
-    st.markdown('<div class="step-name">01 · ข้อมูลสุขภาพและประวัติครอบครัว</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-name"> ข้อมูลสุขภาพ</div>', unsafe_allow_html=True)
     left, right = st.columns(2, gap="large")
 
     def select_feature(feature: str, col):
@@ -176,14 +175,13 @@ with st.form("health_form", clear_on_submit=False):
     select_feature("Family_History_CVD", right)
     select_feature("Family_History_T2D", left)
 
-    st.markdown('<div class="step-name">02 · พฤติกรรมการดำเนินชีวิต</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-name"> </div>', unsafe_allow_html=True)
     select_feature("Smoking_Status", left)
     select_feature("Alcohol_Consumption", right)
     select_feature("Physical_Activity_Level", left)
     select_feature("Sleep_Quality", right)
-    st.caption("แอลกอฮอล์: **ไม่ดื่มเลย (None)** = Low/คะแนน 0 แต่ **ไม่ทราบ** = ไม่ใช่ 0")
 
-    st.markdown('<div class="step-name">03 · สุขภาวะทางจิต</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-name"> </div>', unsafe_allow_html=True)
     numeric_feature("Stress_Level", left)
     numeric_feature("Depression_Score", right)
     numeric_feature("Anxiety_Score", left)
@@ -257,7 +255,7 @@ if result is not None:
         
 
     st.markdown("---")
-    st.caption("**หมายเหตุ:** ผลนี้เป็นการประมาณประเภทความต้องการความคุ้มครองจาก CatBoost เพื่อการสาธิต ไม่ใช่โอกาสเกิดโรค การวินิจฉัย หรือคำแนะนำซื้อกรมธรรม์จริง หากมีคำตอบว่า ‘ไม่ทราบ’ ผลอาจคลาดเคลื่อนและยังไม่ได้ยืนยันความแม่นยำสำหรับข้อมูลที่ไม่ครบ โดย ‘ไม่ทราบ’ ไม่ได้หมายถึงความเสี่ยงต่ำหรือไม่ดื่มแอลกอฮอล์")
+    st.caption("**หมายเหตุ:** ผลนี้เป็นการประมาณประเภทความต้องการความคุ้มครอง เพื่อการสาธิต ไม่ใช่โอกาสเกิดโรค การวินิจฉัย หรือคำแนะนำซื้อกรมธรรม์จริง")
 
 st.markdown("---")
 
