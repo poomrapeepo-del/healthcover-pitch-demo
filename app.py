@@ -225,7 +225,7 @@ if submitted:
 result = st.session_state.get("prediction_result")
 if result is not None:
     st.divider()
-    st.subheader("ผลวิเคราะห์สำหรับข้อมูลตัวอย่าง")
+    st.subheader("ผลวิเคราะห์สำหรับข้อมูล")
     missing = result["missing"]
     if missing:
         st.warning(
@@ -233,7 +233,7 @@ if result is not None:
             + ", ".join(THAI_FEATURES[f] for f in missing)
             + ". คำแนะนำเป็นผลประมาณจากข้อมูลที่ยังไม่ครบ และยังไม่ได้ยืนยันความแม่นยำสำหรับกรณีนี้"
         )
-    st.markdown("#### 3 อันดับคำแนะนำจาก CatBoost")
+    st.markdown("#### 3 อันดับคำแนะนำ")
     if result["top3"] is None:
         st.info("ยังไม่ได้เชื่อมไฟล์โมเดลที่ฝึกจริง จึงไม่สร้างเปอร์เซ็นต์ Top 3 ขึ้นเอง โปรดคัดลอกโมเดล .cbm และ config .pkl จาก Notebook ลงใน models/ ก่อนสาธิตส่วนนี้")
     else:
@@ -245,8 +245,7 @@ if result is not None:
                     f'<div class="result-card"><div class="rank">อันดับที่ {item["rank"]}</div>'
                     f'<div class="result-title">{LABELS[label][0]}</div>'
                     f'<div class="little">{LABELS[label][1]}</div>'
-                    f'<div class="result-score">{item["probability"]*100:.2f}%</div>'
-                    f'<div class="little">ความน่าจะเป็นของประเภทคำแนะนำจากโมเดล</div></div>',
+                    f'<div class="result-score">{item["probability"]*100:.2f}%</div>',
                     unsafe_allow_html=True,
                 )
                 supporting = (result["factors"] or {}).get(label, [])
