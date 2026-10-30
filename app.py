@@ -122,13 +122,6 @@ DISPLAY_OPTIONS = {
     "Lightly Active": "ออกกำลังกายเล็กน้อย", "Sedentary": "ไม่ค่อยเคลื่อนไหว",
     "Excellent": "ดีเยี่ยม", "Good": "ดี", "Fair": "พอใช้", "Poor": "ไม่ดี",
 }
-SCORES_DISPLAY = [
-    ("Heart_Need_Score", "ด้านหัวใจและหลอดเลือด", "❤️"),
-    ("Diabetes_Need_Score", "ด้านโรคเบาหวาน", "🩸"),
-    ("Mental_Need_Score", "ด้านสุขภาวะทางจิต", "🧠"),
-    ("Lifestyle_Need_Score", "ด้านพฤติกรรมสุขภาพ", "🌿"),
-]
-
 
 def reset_profile(profile: str) -> None:
     for feature, val in SAMPLE_PROFILES[profile].items():
@@ -152,16 +145,12 @@ st.sidebar.divider()
 if has_model_files():
     st.sidebar.success("ตรวจพบไฟล์โมเดล CatBoost และ config")
 else:
-    st.sidebar.warning("ยังไม่มีไฟล์โมเดล: ใช้โหมดสาธิต Need Score และกฎได้")
+    st.sidebar.warning("ยังไม่มีไฟล์โมเดล: ยังไม่สามารถแสดงคำแนะนำ Top 3 ได้")
 st.sidebar.caption("สำหรับ Top 3 ที่เป็นผลทำนายจริง ให้คัดลอกไฟล์ .cbm และ .pkl ที่ Notebook สร้างไว้ลงในโฟลเดอร์ models/")
-with st.sidebar.expander("ความหมายของคำว่า ไม่ทราบ"):
-    st.write("ไม่ทราบ ≠ ไม่ดื่ม และไม่ทราบ ≠ ความเสี่ยงต่ำ")
-    st.write("ข้อมูลแอลกอฮอล์ที่ไม่ทราบจะเป็นหมวดหมู่ Unknown สำหรับ CatBoost และถูกละเว้นจากค่าเฉลี่ยพฤติกรรมใน Need Score")
-    st.write("หากตัวแปรสำคัญที่เป็นองค์ประกอบคะแนนหายไป ระบบจะไม่แสดงคะแนนด้านนั้นเป็น 0")
 
 st.markdown("""<div class="hero"><div class="eyebrow">PERSONALIZED HEALTH COVERAGE • RESEARCH DEMO</div>
 <h1>ระบบแนะนำความต้องการความคุ้มครองสุขภาพ</h1>
-<p>กรอกข้อมูลสุขภาพ → ประเมิน Need Score 4 ด้าน → แสดงคำแนะนำ 3 อันดับด้วย CatBoost และปัจจัยที่เกี่ยวข้อง</p>
+<p>กรอกข้อมูลสุขภาพ → วิเคราะห์ด้วย CatBoost → แสดง 3 อันดับคำแนะนำและปัจจัยที่เกี่ยวข้อง</p>
 </div>""", unsafe_allow_html=True)
 
 st.info("**การสาธิต ไม่ใช่การตรวจวินิจฉัยหรือขายประกัน**  ผลเป็นความต้องการความคุ้มครองตามเกณฑ์ที่กำหนดจากงานวิจัย และเปอร์เซ็นต์จาก CatBoost ไม่ใช่โอกาสเกิดโรค", icon="ℹ️")
@@ -238,26 +227,8 @@ if result is not None:
         st.warning(
             f"กรอกไม่ทราบ {len(missing)} ตัวแปร: "
             + ", ".join(THAI_FEATURES[f] for f in missing)
-            + ". ผลบางด้านอาจคำนวณไม่ได้ และโมเดลยังไม่ได้ตรวจสอบความแม่นยำสำหรับข้อมูลที่ขาดทุกลักษณะ"
+            + ". คำแนะนำเป็นผลประมาณจากข้อมูลที่ยังไม่ครบ และยังไม่ได้ยืนยันความแม่นยำสำหรับกรณีนี้"
         )
-    st.markdown("#### คะแนนความต้องการทั้ง 4 ด้าน")
-    score_cols = st.columns(4, gap="medium")
-    for col, (key, display, emoji) in zip(score_cols, SCORES_DISPLAY):
-        val = result["scores"][key]
-        with col:
-            st.markdown(f"**{emoji} {display}**")
-            if pd.isna(val):
-                st.metric("Need Score", "ไม่ทราบ")
-                st.caption("ข้อมูลหลักไม่ครบ ไม่แทนเป็น 0")
-            else:
-                st.metric("Need Score", f"{val:.3f}")
-                st.progress(min(1., max(0., float(val))))
-    rule_label = result["rule_label"]
-    if rule_label is None:
-        st.caption("ผลจากกฎ: ยังสรุปไม่ได้ เพราะมี Need Score บางด้านที่คำนวณไม่ได้")
-    else:
-        st.caption(f"**ผลจากกฎ Need Score:** {LABELS[rule_label][0]} — เป็นผลตามกฎ ไม่ใช่ผลทำนาย CatBoost")
-
     st.markdown("#### 3 อันดับคำแนะนำจาก CatBoost")
     if result["top3"] is None:
         st.info("ยังไม่ได้เชื่อมไฟล์โมเดลที่ฝึกจริง จึงไม่สร้างเปอร์เซ็นต์ Top 3 ขึ้นเอง โปรดคัดลอกโมเดล .cbm และ config .pkl จาก Notebook ลงใน models/ ก่อนสาธิตส่วนนี้")
@@ -285,14 +256,8 @@ if result is not None:
             st.warning(f"ส่วน SHAP ไม่พร้อมใช้งาน: {result['shap_error']}")
         st.caption("SHAP บวกหมายถึงมีส่วนเพิ่ม **คะแนนดิบของคลาสนั้น** ไม่ได้เป็นการเพิ่มเปอร์เซ็นต์ความเสี่ยงการเกิดโรค")
 
-    with st.expander("ดูวิธีคิดและข้อจำกัดทางวิจัย"):
-        w = result["weights"]
-        st.write(f"น้ำหนักคะแนน Need Score: {float(w['clinical_weight']):.0%} / {float(w['family_weight']):.0%} / {float(w['lifestyle_weight']):.0%} (ตาม config ของโมเดลหากมี)")
-        st.write("ใช้เกณฑ์ 0.65 (High), 0.50 (Dominant), 0.10 (Margin) และ 0.45 (Preventive)")
-        st.write("คำว่า 'ไม่ทราบ' ในข้อมูลหมวดหมู่จะส่งเป็น Unknown เข้า CatBoost; ตัวเลขที่ไม่ทราบจะเป็น NaN. CatBoost รองรับการทำนาย แต่ประสิทธิภาพของกรณี Unknown ยังไม่ได้ผ่านการทดสอบกับข้อมูลจริง")
-        st.write("ในการคำนวณ Need Score ค่า Unknown ภายในค่าเฉลี่ยรายองค์ประกอบจะถูกข้าม แต่หากองค์ประกอบถ่วงน้ำหนักหลักขาด จะไม่แสดง Need Score ด้านนั้น และไม่สร้าง Rule Label")
-        st.write("None ที่หมายถึงไม่ดื่มแอลกอฮอล์จะส่งเข้าโมเดลเป็น Low ตามนโยบายการทดลอง Low=0 ส่วน 'ไม่ทราบ' เป็นอีกหมวดหมู่")
-        st.write("ไม่ใช่การวินิจฉัยโรค คำนวณราคาเบี้ยประกัน หรือคำแนะนำกรมธรรม์จริง")
+    st.markdown("---")
+    st.caption("**หมายเหตุ:** ผลนี้เป็นการประมาณประเภทความต้องการความคุ้มครองจาก CatBoost เพื่อการสาธิต ไม่ใช่โอกาสเกิดโรค การวินิจฉัย หรือคำแนะนำซื้อกรมธรรม์จริง หากมีคำตอบว่า ‘ไม่ทราบ’ ผลอาจคลาดเคลื่อนและยังไม่ได้ยืนยันความแม่นยำสำหรับข้อมูลที่ไม่ครบ โดย ‘ไม่ทราบ’ ไม่ได้หมายถึงความเสี่ยงต่ำหรือไม่ดื่มแอลกอฮอล์")
 
 st.markdown("---")
 st.caption("โครงงานวิจัยระดับปริญญาตรี • ระบบต้นแบบสำหรับการนำเสนอ • 7 Recommendation Labels • Random Forest / CatBoost / Weak Supervision / SHAP")
