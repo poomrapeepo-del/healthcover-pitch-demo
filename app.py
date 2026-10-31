@@ -123,9 +123,58 @@ DISPLAY_OPTIONS = {
     "Excellent": "ดีเยี่ยม", "Good": "ดี", "Fair": "พอใช้", "Poor": "ไม่ดี",
 }
 
+def calculate_bmi(height_text: str, weight_text: str):
+    """Convert user-entered centimetres and kilograms into the BMI feature.
+
+    Keep BMI in the original CatBoost feature schema. Empty/unknown values
+    propagate as UNKNOWN to the existing missing-value handling.
+    """
+    height_raw = str(height_text).strip()
+    weight_raw = str(weight_text).strip()
+
+    if is_unknown(height_raw) or is_unknown(weight_raw) or not height_raw or not weight_raw:
+        return UNKNOWN
+
+    try:
+        height_cm = float(height_raw.replace(",", "."))
+        weight_kg = float(weight_raw.replace(",", "."))
+    except ValueError as exc:
+        raise ValueError("กรุณากรอกส่วนสูงและน้ำหนักเป็นตัวเลข เช่น 170 และ 65") from exc
+
+    if not (math.isfinite(height_cm) and math.isfinite(weight_kg)):
+        raise ValueError("ส่วนสูงและน้ำหนักต้องเป็นตัวเลขที่ใช้คำนวณได้")
+    if not (80 <= height_cm <= 250):
+        raise ValueError("ส่วนสูงต้องอยู่ระหว่าง 80–250 เซนติเมตร")
+    if not (20 <= weight_kg <= 350):
+        raise ValueError("น้ำหนักต้องอยู่ระหว่าง 20–350 กิโลกรัม")
+
+    bmi = weight_kg / ((height_cm / 100) ** 2)
+    bmi_min, bmi_max = NUMERIC_RANGES["BMI"]
+    if not (bmi_min <= bmi <= bmi_max):
+        raise ValueError(
+            f"ค่า BMI ที่คำนวณได้ ({bmi:.2f}) อยู่นอกช่วงที่ระบบรองรับ "
+            f"({bmi_min:g}–{bmi_max:g}) กรุณาตรวจสอบส่วนสูงและน้ำหนัก"
+        )
+    return round(bmi, 2)
+
+
 def reset_profile(profile: str) -> None:
-    for feature, val in SAMPLE_PROFILES[profile].items():
-        st.session_state[f"input_{feature}"] = val
+    preset = SAMPLE_PROFILES[profile]
+    for feature, val in preset.items():
+        if feature != "BMI":
+            st.session_state[f"input_{feature}"] = val
+
+    # ตัวอย่างเดิมมี BMI อย่างเดียว: ใช้ส่วนสูงสมมติ 170 ซม.
+    # และแปลงกลับเป็นน้ำหนักให้โปรไฟล์ตัวอย่าง โดยไม่แตะโมเดล
+    preset_bmi = preset.get("BMI", UNKNOWN)
+    if is_unknown(preset_bmi):
+        st.session_state["input_Height_cm"] = ""
+        st.session_state["input_Weight_kg"] = ""
+    else:
+        example_height_cm = 170.0
+        example_weight_kg = float(preset_bmi) * (example_height_cm / 100) ** 2
+        st.session_state["input_Height_cm"] = f"{example_height_cm:g}"
+        st.session_state["input_Weight_kg"] = f"{example_weight_kg:.2f}"
     st.session_state.pop("prediction_result", None)
 
 
@@ -177,11 +226,17 @@ with st.form("health_form", clear_on_submit=False):
                 st.write(f"กรอกตัวเลขในช่วง {low:g}–{high:g}")
                 st.caption("หากไม่ทราบข้อมูล สามารถพิมพ์ 'ไม่ทราบ' หรือเว้นว่างได้")
 
-    numeric_feature("BMI", left)
-    select_feature("Heart_Disease_Risk", right)
-    select_feature("Diabetes_Risk", left)
-    select_feature("Family_History_CVD", right)
-    select_feature("Family_History_T2D", left)
+    # รับส่วนสูง/น้ำหนักแทนการให้ผู้ใช้คำนวณ BMI เอง
+    with left:
+        st.text_input("ส่วนสูง (เซนติเมตร)", key="input_Height_cm", placeholder="เช่น 170")
+    with right:
+        st.text_input("น้ำหนัก (กิโลกรัม)", key="input_Weight_kg", placeholder="เช่น 65")
+    st.caption("ระบบจะคำนวณค่า BMI จากส่วนสูงและน้ำหนักให้อัตโนมัติ")
+
+    select_feature("Heart_Disease_Risk", left)
+    select_feature("Diabetes_Risk", right)
+    select_feature("Family_History_CVD", left)
+    select_feature("Family_History_T2D", right)
 
     select_feature("Smoking_Status", left)
     select_feature("Alcohol_Consumption", right)
@@ -196,8 +251,13 @@ with st.form("health_form", clear_on_submit=False):
     submitted = st.form_submit_button("วิเคราะห์และแสดงผลคำแนะนำ", use_container_width=True)
 
 if submitted:
-    raw_user = {f: st.session_state[f"input_{f}"] for f in FEATURES}
     try:
+        # ส่วนสูง/น้ำหนักใช้คำนวณในเว็บเท่านั้น โมเดลยังรับฟีเจอร์ BMI เดิม
+        raw_user = {f: st.session_state[f"input_{f}"] for f in FEATURES if f != "BMI"}
+        raw_user["BMI"] = calculate_bmi(
+            st.session_state["input_Height_cm"],
+            st.session_state["input_Weight_kg"],
+        )
         parsed = parse_user_inputs(raw_user)
         unknowns = unknown_fields(raw_user)
         model_available = has_model_files()
@@ -225,7 +285,10 @@ if submitted:
 result = st.session_state.get("prediction_result")
 if result is not None:
     st.divider()
-    st.subheader("ผลวิเคราะห์สำหรับข้อมูล")
+    st.subheader("ผลวิเคราะห์สำหรับข้อมูลตัวอย่าง")
+    result_bmi = result["raw_user"].get("BMI", UNKNOWN)
+    if not is_unknown(result_bmi):
+        st.caption(f"ดัชนีมวลกาย (BMI) ที่คำนวณจากส่วนสูงและน้ำหนัก: {float(result_bmi):.2f} กก./ม²")
     missing = result["missing"]
     if missing:
         st.warning(
@@ -233,7 +296,7 @@ if result is not None:
             + ", ".join(THAI_FEATURES[f] for f in missing)
             + ". คำแนะนำเป็นผลประมาณจากข้อมูลที่ยังไม่ครบ และยังไม่ได้ยืนยันความแม่นยำสำหรับกรณีนี้"
         )
-    st.markdown("#### 3 อันดับคำแนะนำ")
+    st.markdown("#### 3 อันดับคำแนะนำจาก CatBoost")
     if result["top3"] is None:
         st.info("ยังไม่ได้เชื่อมไฟล์โมเดลที่ฝึกจริง จึงไม่สร้างเปอร์เซ็นต์ Top 3 ขึ้นเอง โปรดคัดลอกโมเดล .cbm และ config .pkl จาก Notebook ลงใน models/ ก่อนสาธิตส่วนนี้")
     else:
@@ -245,7 +308,8 @@ if result is not None:
                     f'<div class="result-card"><div class="rank">อันดับที่ {item["rank"]}</div>'
                     f'<div class="result-title">{LABELS[label][0]}</div>'
                     f'<div class="little">{LABELS[label][1]}</div>'
-                    f'<div class="result-score">{item["probability"]*100:.2f}%</div>',
+                    f'<div class="result-score">{item["probability"]*100:.2f}%</div>'
+                    f'<div class="little">ความน่าจะเป็นของประเภทคำแนะนำจากโมเดล</div></div>',
                     unsafe_allow_html=True,
                 )
                 supporting = (result["factors"] or {}).get(label, [])
