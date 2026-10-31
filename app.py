@@ -231,7 +231,7 @@ with st.form("health_form", clear_on_submit=False):
         st.text_input("ส่วนสูง (เซนติเมตร)", key="input_Height_cm", placeholder="เช่น 170")
     with right:
         st.text_input("น้ำหนัก (กิโลกรัม)", key="input_Weight_kg", placeholder="เช่น 65")
-    st.caption("ระบบจะคำนวณค่า BMI จากส่วนสูงและน้ำหนักให้อัตโนมัติ")
+    st.caption("")
 
     select_feature("Heart_Disease_Risk", left)
     select_feature("Diabetes_Risk", right)
